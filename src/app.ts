@@ -88,4 +88,34 @@ class InputElement{
     this.element.addEventListener('submit',this.submitHandler);
   }
 }
+
+// project list class
+class ProjectList{
+  templetElement: HTMLTemplateElement;
+  hostElement: HTMLDivElement;
+  element: HTMLElement;
+  assignedProject: any[];
+  constructor(private type: 'active'|'finished'){
+    this.templetElement=document.getElementById('project-list')! as HTMLTemplateElement;
+    this.hostElement=document.getElementById('app')! as HTMLDivElement;
+    const importedNode=document.importNode(this.templetElement.content,true);
+    this.element=importedNode.firstElementChild as HTMLElement;
+    this.element.id=`${this.type}-projects`;
+    this.assignedProject=[];
+    this.attach();
+    this.renderContent();
+  }
+  private attach(){
+    this.hostElement.insertAdjacentElement('beforeend',this.element);
+  }
+  private renderContent(){
+    const listId=`${this.type}-project-list`;
+    this.element.querySelector('ul')!.id=listId;
+    this.element.querySelector('h2')!.textContent=this.type.toUpperCase()+'PROJECTS';
+  }
+
+
+}
 const inputElement=new InputElement();
+const activeProjectList=new ProjectList('active');
+const finishedProjectList=new ProjectList('finished');
