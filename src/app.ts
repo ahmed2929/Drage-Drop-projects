@@ -1,17 +1,91 @@
+// decrator auto bind
+
+function Autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
+  const originalMethod = descriptor.value;
+  const adjDescriptor: PropertyDescriptor = {
+    configurable: true,
+    get() {
+      const boundFn = originalMethod.bind(this);
+      return boundFn;
+    },
+  };
+  return adjDescriptor;
+}
+interface validatable{
+  value:string|number;
+  required?:boolean;
+  minLength?:number;
+  maxLength?:number;
+  min?:number;
+  max?:number;
+
+}
+function Validate(data:validatable){
+  let isValid=true;
+  if(data.required){
+    isValid=isValid && data.value.toString().trim().length!==0;
+  }
+  if(data.minLength!=null && typeof data.value==='string'){
+    isValid=isValid && data.value.length>data.minLength;
+  }
+  if(data.maxLength!=null && typeof data.value==='string'){
+    isValid=isValid && data.value.length<data.maxLength;
+  }
+  if(data.min!=null && typeof data.value==='number'){
+    isValid=isValid && data.value>data.min;
+  }
+  if(data.max!=null && typeof data.value==='number'){
+    isValid=isValid && data.value<data.max;
+  }
+  return isValid;
+  
+}
+
+
+
+// input class
 class InputElement{
   templetElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
   element: HTMLFormElement;
+  titileInput: HTMLInputElement;
+  descriptionInput: HTMLInputElement;
+  pepoleInput: HTMLInputElement;
   constructor(){
     this.templetElement=document.getElementById('project-input')! as HTMLTemplateElement;
     this.hostElement=document.getElementById('app')! as HTMLDivElement;
     const importedNode=document.importNode(this.templetElement.content,true);
     this.element=importedNode.firstElementChild as HTMLFormElement;
+    this.element.id='user-input';
+    this.titileInput=this.element.querySelector('#title')! as HTMLInputElement;
+    this.descriptionInput=this.element.querySelector('#description')! as HTMLInputElement;
+    this.pepoleInput=this.element.querySelector('#people')! as HTMLInputElement;
+    this.configure()
     this.attach();
   }
 
   private attach(){
     this.hostElement.insertAdjacentElement('afterbegin',this.element);
+  }
+  private clearInput(){
+    this.titileInput.value='';
+    this.descriptionInput.value='';
+    this.pepoleInput.value='';
+  }
+
+
+  @Autobind
+  private submitHandler(event: Event){
+    event.preventDefault();
+    console.log(this.titileInput.value);
+    if(!Validate({value:this.titileInput.value,required:true})||!Validate({value:this.descriptionInput.value,required:true,minLength:5})||!Validate({value:+this.pepoleInput.value,required:true,min:1,max:5})){
+      alert('invalid input');
+      return;
+    }
+    this.clearInput();
+  }
+  private configure(){
+    this.element.addEventListener('submit',this.submitHandler);
   }
 }
 const inputElement=new InputElement();
