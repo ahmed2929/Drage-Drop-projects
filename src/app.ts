@@ -1,3 +1,16 @@
+// drag and drop interfaces
+interface Draggable {
+  dragStartHandler(event: DragEvent): void;
+  dragEndHandler(event: DragEvent): void;
+
+}
+interface DragTarget{
+  dragOverHandler(event:DragEvent):void;
+  dropHandler(event:DragEvent):void;
+  dragLeaveHandler(event:DragEvent):void;
+
+}
+
 // decrator auto bind
 
 function Autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
@@ -32,10 +45,10 @@ function Validate(data:validatable){
     isValid=isValid && data.value.length<data.maxLength;
   }
   if(data.min!=null && typeof data.value==='number'){
-    isValid=isValid && data.value>data.min;
+    isValid=isValid && data.value>=data.min;
   }
   if(data.max!=null && typeof data.value==='number'){
-    isValid=isValid && data.value<data.max;
+    isValid=isValid && data.value<=data.max;
   }
   return isValid;
   
@@ -181,6 +194,52 @@ class InputElement extends Componant<HTMLDivElement,HTMLFormElement>{
   
 }
 
+// project item
+class ProjectItem extends Componant<HTMLUListElement,HTMLLIElement> implements Draggable{
+  private project:Project;
+  get persons(){
+    if(this.project.people===1){
+      return '1 person';
+    }else{
+      return `${this.project.people} persons`;
+    }
+  }
+  constructor(hostId:string,project:Project){
+    super('single-project',hostId,false,project.id);
+    this.project=project;
+    this.configure();
+    this.renderContent();
+  }
+  @Autobind
+  DrageStartHandler(event:DragEvent){
+    event.dataTransfer!.setData('text/plain',this.project.id);
+    event.dataTransfer!.effectAllowed='move';
+  }
+  DragEndHandler(event:DragEvent){
+    console.log('drag end',event);
+  }
+
+
+  configure(){
+    this.element.addEventListener('dragstart',this.dragStartHandler);
+    this.element.addEventListener('dragend',this.dragEndHandler);
+  }
+  renderContent(){
+    this.element.querySelector('h2')!.textContent=this.project.title;
+    this.element.querySelector('h3')!.textContent=this.persons+' assigned';
+    this.element.querySelector('p')!.textContent=this.project.description;
+  }
+  @Autobind
+  dragStartHandler(event:DragEvent){
+    event.dataTransfer!.setData('text/plain',this.project.id);
+    event.dataTransfer!.effectAllowed='move';
+  }
+  @Autobind
+  dragEndHandler(_:DragEvent){
+    console.log('drag end');
+  }
+}
+
 // project list class
 class ProjectList extends Componant<HTMLDivElement,HTMLElement>{
   
@@ -212,14 +271,11 @@ class ProjectList extends Componant<HTMLDivElement,HTMLElement>{
     this.element.querySelector('h2')!.textContent=this.type.toUpperCase()+'PROJECTS';
   }
   private renderProject(){
-    console.log("reder runs")
-    console.log("stated",projectState.projects);
     const listEl=document.getElementById(`${this.type}-project-list`)! as HTMLUListElement;
     listEl.innerHTML='';
     for(const projectItem of this.assignedProject){
-      const listItem=document.createElement('li');
-      listItem.textContent=projectItem.title;
-      listEl.appendChild(listItem);
+      new ProjectItem(this.element.querySelector('ul')!.id,projectItem);
+     
     }
   }
 
